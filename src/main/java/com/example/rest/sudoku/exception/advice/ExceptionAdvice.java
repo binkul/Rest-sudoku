@@ -1,5 +1,6 @@
 package com.example.rest.sudoku.exception.advice;
 
+import com.example.rest.sudoku.exception.SudokuCollisionNumberException;
 import com.example.rest.sudoku.exception.SudokuUnsolvableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,6 +26,15 @@ public class ExceptionAdvice {
         return new SudokuException(LocalDateTime.now(),
                 HttpStatus.NOT_FOUND.value(),
                 HttpStatus.NOT_FOUND.toString(),
+                ex.getMessage());
+    }
+
+    @ExceptionHandler(SudokuCollisionNumberException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public SudokuException sudokuCollisionException(SudokuCollisionNumberException ex) {
+        return new SudokuException(LocalDateTime.now(),
+                HttpStatus.NOT_ACCEPTABLE.value(),
+                HttpStatus.NOT_ACCEPTABLE.toString(),
                 ex.getMessage());
     }
 }

@@ -1,5 +1,7 @@
 package com.example.rest.sudoku.mapper;
 
+import com.example.rest.sudoku.entity.SudokuField;
+import com.example.rest.sudoku.entity.SudokuValues;
 import com.example.rest.sudoku.entity.dto.*;
 import com.example.rest.sudoku.sudoku.Data;
 import com.example.rest.sudoku.sudoku.Element;
@@ -7,6 +9,8 @@ import com.example.rest.sudoku.sudoku.Sudoku;
 import com.example.rest.sudoku.sudoku.Validator;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -42,8 +46,28 @@ public class SudokuMapper {
         return sudoku;
     }
 
-    public SudokuDto mapToSudokuDto(Sudoku sudoku) {
-        SudokuDto sudokuDto = new SudokuDto();
+    public SudokuFieldDto mapToSudokuDto(SudokuField sudokuField) {
+        Sudoku sudoku = new Sudoku();
+
+        for (SudokuValues value : sudokuField.getSudokuValues()) {
+            sudoku.getElement(value.getRow(), value.getColumn()).setNumber(value.getNumber());
+        }
+
+        return new SudokuFieldDto(
+                sudokuField.getId(),
+                sudokuField.getDate(),
+                sudokuField.isCorrect(),
+                getRows(sudoku));
+    }
+
+    public List<SudokuFieldDto> mapToSudokuDtoList(List<SudokuField> fields) {
+        return fields.stream()
+                .map(this::mapToSudokuDto)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getRows(Sudoku sudoku) {
+        List<String> rows = new ArrayList<>();
 
         for (int i = 1; i <= Data.SIZE; i++) {
             String row = sudoku.getRow(i)
@@ -52,9 +76,22 @@ public class SudokuMapper {
                     .map(Element::getNumber)
                     .map(e -> Integer.toString(e))
                     .collect(Collectors.joining("|"));
-            sudokuDto.add(row);
+            rows.add(row);
         }
 
-        return sudokuDto;
+        return rows;
+    }
+
+    public SudokuField mapToSudokuField(Sudoku sudoku) {
+        SudokuField sudokuField = new SudokuField();
+
+        List<SudokuValues> values = sudoku.getField()
+                .entrySet()
+                .stream()
+                .filter(i -> i.getValue().getNumber() != Data.EMPTY)
+                .map(i -> new SudokuValues(i.getKey().getRow(), i.getKey().getColumn(), i.getValue().getNumber(), sudokuField))
+                .collect(Collectors.toList());
+        sudokuField.setSudokuValues(values);
+        return sudokuField;
     }
 }
