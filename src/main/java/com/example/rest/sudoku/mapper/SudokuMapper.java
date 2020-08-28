@@ -3,10 +3,7 @@ package com.example.rest.sudoku.mapper;
 import com.example.rest.sudoku.entity.SudokuField;
 import com.example.rest.sudoku.entity.SudokuValues;
 import com.example.rest.sudoku.entity.dto.*;
-import com.example.rest.sudoku.sudoku.Data;
-import com.example.rest.sudoku.sudoku.Element;
-import com.example.rest.sudoku.sudoku.Sudoku;
-import com.example.rest.sudoku.sudoku.Validator;
+import com.example.rest.sudoku.sudoku.*;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -46,6 +43,22 @@ public class SudokuMapper {
         return sudoku;
     }
 
+    public Sudoku mapToSudoku(SudokuField sudokuField) {
+        Sudoku sudoku = new Sudoku();
+
+        for (SudokuValues value : sudokuField.getSudokuValues()) {
+            int row = value.getRow();
+            int column = value.getColumn();
+            Validator.validateRow(row);
+            Validator.validateColumn(column);
+            Validator.validateNumber(value.getNumber());
+
+            sudoku.getElement(row, column).setNumber(value.getNumber());
+        }
+
+        return sudoku;
+    }
+
     public SudokuFieldDto mapToSudokuDto(SudokuField sudokuField) {
         Sudoku sudoku = new Sudoku();
 
@@ -57,7 +70,20 @@ public class SudokuMapper {
                 sudokuField.getId(),
                 sudokuField.getDate(),
                 sudokuField.isCorrect(),
-                getRows(sudoku));
+                getRows(sudoku, 1));
+    }
+
+    public SudokuFieldDto mapToSudokuDto(Sudoku sudoku, Long id) {
+        SudokuField sudokuField = mapToSudokuField(sudoku, id);
+        return mapToSudokuDto(sudokuField);
+    }
+
+    public SudokuFieldDto mapToColorSudokuDto(Sudoku sudoku, SudokuField sudokuField) {
+        return new SudokuFieldDto(
+                sudokuField.getId(),
+                sudokuField.getDate(),
+                sudokuField.isCorrect(),
+                getRows(sudoku, -1));
     }
 
     public List<SudokuFieldDto> mapToSudokuDtoList(List<SudokuField> fields) {
@@ -66,6 +92,21 @@ public class SudokuMapper {
                 .collect(Collectors.toList());
     }
 
+    public SudokuField mapToSudokuField(Sudoku sudoku, Long id) {
+        SudokuField sudokuField = new SudokuField();
+        sudokuField.setId(id);
+
+        List<SudokuValues> values = sudoku.getField()
+                .entrySet()
+                .stream()
+                .filter(i -> i.getValue().getNumber() != Data.EMPTY)
+                .map(i -> new SudokuValues(i.getKey().getRow(), i.getKey().getColumn(), i.getValue().getNumber(), sudokuField))
+                .collect(Collectors.toList());
+        sudokuField.setSudokuValues(values);
+        return sudokuField;
+    }
+
+/*
     private List<String> getRows(Sudoku sudoku) {
         List<String> rows = new ArrayList<>();
 
@@ -78,20 +119,25 @@ public class SudokuMapper {
                     .collect(Collectors.joining("|"));
             rows.add(row);
         }
-
         return rows;
     }
+*/
 
-    public SudokuField mapToSudokuField(Sudoku sudoku) {
-        SudokuField sudokuField = new SudokuField();
+    private List<String> getRows(Sudoku sudoku, int neg) {
+        List<String> rows = new ArrayList<>();
 
-        List<SudokuValues> values = sudoku.getField()
-                .entrySet()
-                .stream()
-                .filter(i -> i.getValue().getNumber() != Data.EMPTY)
-                .map(i -> new SudokuValues(i.getKey().getRow(), i.getKey().getColumn(), i.getValue().getNumber(), sudokuField))
-                .collect(Collectors.toList());
-        sudokuField.setSudokuValues(values);
-        return sudokuField;
+        for (int i = 1; i <= Data.SIZE; i++) {
+            String row = sudoku.getRow(i)
+                    .values()
+                    .stream()
+                    .map(e -> {
+                        if (e.getFontColor() == FontColor.BLACK) return e.getNumber();
+                        else return neg * e.getNumber();
+                    })
+                    .map(e -> Integer.toString(e))
+                    .collect(Collectors.joining("|"));
+            rows.add(row);
+        }
+        return rows;
     }
 }

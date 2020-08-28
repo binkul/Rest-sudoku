@@ -28,6 +28,16 @@ public class SudokuController {
         return service.getValid();
     }
 
+    @GetMapping(value = "/solve/{id}")
+    public SudokuFieldDto getSolved(@PathVariable Long id) {
+        return service.getSolved(id, false);
+    }
+
+    @GetMapping(value =  "/solve/color/{id}")
+    public SudokuFieldDto getSolvedColor(@PathVariable Long id) {
+        return service.getSolved(id, true);
+    }
+
     @PostMapping(value = "/absolute")
     public SudokuFieldDto solve(@RequestBody AbsoluteSudokuDto sudoku) {
         return service.save(sudoku);
@@ -36,5 +46,10 @@ public class SudokuController {
     @PostMapping(value = "/relative")
     public SudokuFieldDto solve(@RequestBody RelativeSudokuDto sudoku) {
         return service.save(sudoku);
+    }
+
+    @DeleteMapping(value = "/del/{id}")
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
     }
 }

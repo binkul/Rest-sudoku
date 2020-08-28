@@ -37,7 +37,7 @@ public class MapperTestSuite {
         sudoku.getElement(5,5).setNumber(5);
 
         // When
-        SudokuField sudokuField = mapper.mapToSudokuField(sudoku);
+        SudokuField sudokuField = mapper.mapToSudokuField(sudoku, 1L);
 
         // Then
         assertEquals(5, sudokuField.getSudokuValues().size());
